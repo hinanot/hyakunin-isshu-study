@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f3f0e8">
+<title>百人一首 学習帖</title>
+<style>
+:root{
+  --bg:#f3f0e8;
+  --paper:#fbfaf6;
+  --ink:#111111;
+  --muted:#77736c;
+  --line:#1a1a1a;
+  --softline:#d8d3c8;
+  --accent:#e75d36;
+  --green:#5f7b65;
+  --yellow:#b7892e;
+  --red:#a64b45;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+button,select{font:inherit}
+.app{max-width:1180px;margin:0 auto;padding:0 18px 56px}
+
+/* editorial header */
+.hero{
+  min-height:54vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:22px 0 30px;
+  border-bottom:2px solid var(--ink);
+}
+.topline{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.72rem;letter-spacing:.14em;text-transform:uppercase
+}
+.hero-main{padding:38px 0 28px}
+.hero h1{
+  margin:0;
+  font-size:clamp(3.6rem,13vw,8.5rem);
+  line-height:.84;
+  letter-spacing:-.065em;
+  font-weight:900;
+}
+.hero h1 span{display:block}
+.hero .sub{
+  margin:28px 0 0;
+  max-width:720px;
+  font-size:clamp(1rem,2.4vw,1.35rem)
+}
+.hero-foot{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  align-items:end
+}
+.goal{
+  max-width:680px;
+  font-weight:700;
+  font-size:1rem;
+  border-top:1px solid var(--ink);
+  padding-top:10px
+}
+.progress-mini{
+  justify-self:end;
+  font-size:clamp(2rem,5vw,4rem);
+  font-weight:900;
+  letter-spacing:-.05em;
+}
+.progress-mini small{
+  display:block;
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-align:right;
+  color:var(--muted)
+}
+
+/* sticky nav */
+.tabs{
+  position:sticky;top:0;z-index:50;
+  display:flex;
+  justify-content:space-between;
+  gap:0;
+  padding:10px 0;
+  background:rgba(243,240,232,.94);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--ink);
+}
+.tab{
+  border:0;background:none;padding:8px 0;
+  font-weight:800;font-size:.9rem;
+  color:var(--muted)
+}
+.tab.active{color:var(--ink)}
+.tab.active:after{content:" ●";color:var(--accent)}
+
+.panel{display:none;padding-top:32px}
+.panel.active{display:block}
+
+/* sections */
+section{
+  border-top:1px solid var(--ink);
+  padding:18px 0 42px;
+  margin-top:0
+}
+.section-head{
+  display:flex;justify-content:space-between;align-items:baseline;gap:20px;margin-bottom:22px
+}
+.section-head h2{
+  margin:0;
+  font-size:clamp(1.7rem,4vw,3.2rem);
+  letter-spacing:-.045em;
+}
+.section-no{
+  font-size:.72rem;letter-spacing:.12em;color:var(--muted)
+}
+
+/* stats */
+.stats{
+  display:grid;
+  grid-template-columns:2fr repeat(3,1fr);
+  border-top:1px solid var(--softline);
+  border-left:1px solid var(--softline);
+}
+.stat{
+  min-height:140px;
+  padding:16px;
+  border-right:1px solid var(--softline);
+  border-bottom:1px solid var(--softline);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.stat span{font-size:.78rem;color:var(--muted);letter-spacing:.06em}
+.stat b{font-size:clamp(2rem,5vw,4rem);line-height:1;letter-spacing:-.05em}
+.bar{height:4px;background:#d8d3c8;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.controls{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;margin-top:18px
+}
+.control{
+  min-height:54px;
+  border:1px solid var(--ink);
+  background:transparent;
+  padding:12px 14px;
+  font-weight:800;
+  text-align:left;
+  border-radius:0
+}
+.control:hover{background:var(--ink);color:#fff}
+
+/* today */
+.review-list{border-top:1px solid var(--softline)}
+.review-list .item{
+  display:grid;
+  grid-template-columns:56px 1fr auto;
+  gap:16px;align-items:center;
+  padding:16px 0;
+  border-bottom:1px solid var(--softline);
+  cursor:pointer
+}
+.review-list .item:hover{padding-left:8px}
+.review-list .num{font-size:1.6rem;font-weight:900;letter-spacing:-.04em}
+
+/* list */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th{
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);
+  font-weight:700;padding:9px 8px;border-bottom:1px solid var(--ink);text-align:left
+}
+td{padding:14px 8px;border-bottom:1px solid var(--softline)}
+tr.clickable{cursor:pointer}
+tr.clickable:hover td{background:#ebe6dc}
+td:nth-child(1){font-weight:900}
+td:nth-child(2){font-weight:800}
+
+.badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:34px;height:24px;
+  border:1px solid currentColor;
+  padding:0 7px;
+  font-size:.72rem;font-weight:900
+}
+.green{color:var(--green)}.yellow{color:var(--yellow)}.red{color:var(--red)}
+
+/* detail */
+.detail{display:none}
+.detail.open{display:block}
+.back{
+  border:0;background:none;padding:0 0 20px;
+  font-weight:800;color:var(--ink)
+}
+.detail-title{
+  display:grid;
+  grid-template-columns:100px 1fr;
+  align-items:end;
+  gap:20px;
+  margin-bottom:24px
+}
+.detail-no{
+  font-size:clamp(3rem,8vw,6rem);
+  line-height:.8;
+  font-weight:900;
+  color:var(--accent);
+  letter-spacing:-.06em
+}
+.detail-title h2{
+  margin:0;
+  font-size:clamp(2rem,6vw,4.8rem);
+  line-height:.95;
+  letter-spacing:-.055em
+}
+.meta{margin-top:10px;color:var(--muted);font-size:.85rem}
+.poem-block{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:30px;
+  border-top:1px solid var(--ink);
+  padding-top:24px
+}
+.poem{
+  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+  font-size:clamp(1.5rem,4vw,2.7rem);
+  line-height:1.8;
+  letter-spacing:.02em
+}
+.likes{
+  text-align:right;font-size:1.4rem;white-space:nowrap
+}
+.field-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+  margin-top:32px;
+  border-top:1px solid var(--ink);
+  border-left:1px solid var(--softline)
+}
+.field{
+  min-height:150px;
+  padding:16px;
+  border-right:1px solid var(--softline);
+  border-bottom:1px solid var(--softline)
+}
+.field b{
+  display:block;
+  font-size:.72rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:10px
+}
+
+/* roadmap */
+.roadmap-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--softline);border-left:1px solid var(--softline)}
+.card{
+  padding:20px;
+  border-right:1px solid var(--softline);
+  border-bottom:1px solid var(--softline);
+  min-height:170px
+}
+.card b{display:block;font-size:1.2rem;margin-bottom:8px}
+.quote{
+  margin-top:20px;
+  border-top:2px solid var(--ink);
+  border-bottom:2px solid var(--ink);
+  padding:22px 0;
+  font-size:clamp(1.3rem,3vw,2.2rem);
+  font-weight:900;
+  letter-spacing:-.03em
+}
+.muted{color:var(--muted)}
+.updated{text-align:right;color:var(--muted);font-size:.72rem;margin-top:14px;letter-spacing:.08em}
+
+@media(max-width:720px){
+  .app{padding-left:14px;padding-right:14px}
+  .hero{min-height:48vh}
+  .hero-foot{grid-template-columns:1fr}
+  .progress-mini{justify-self:start}.progress-mini small{text-align:left}
+  .stats{grid-template-columns:1fr 1fr}
+  .controls{grid-template-columns:1fr}
+  .poem-block{grid-template-columns:1fr}
+  .likes{text-align:left}
+  .field-grid,.roadmap-grid{grid-template-columns:1fr}
+  .detail-title{grid-template-columns:70px 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="hero">
+  <div class="topline"><span>Hyakunin Isshu Study Hub</span><span>01—100</span></div>
+  <div class="hero-main">
+    <h1><span>百人一首</span><span>学習帖。</span></h1>
+    <p class="sub">一首ずつ、ことば・文法・背景・記憶を重ねていく。百人一首を入口に、いつか平安時代の巻物を自分の目で読むための個人アーカイブ。</p>
+  </div>
+  <div class="hero-foot">
+    <div class="goal">GOAL — 古文が読める × くずし字が読める = 平安時代の巻物が読める。</div>
+    <div class="progress-mini"><span id="heroCount">—</span><small>LEARNED / 100</small></div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-panel="study">STUDY LOG</button>
+  <button class="tab" data-panel="roadmap">ROADMAP</button>
+</nav>
+
+<div id="study" class="panel active">
+
+<section>
+  <div class="section-head"><h2>Progress</h2><span class="section-no">01</span></div>
+  <div class="stats">
+    <div class="stat"><span>LEARNED</span><b id="learnedCount">—</b><div class="bar"><i id="progressBar"></i></div></div>
+    <div class="stat"><span>GREEN</span><b id="greenCount">—</b></div>
+    <div class="stat"><span>YELLOW</span><b id="yellowCount">—</b></div>
+    <div class="stat"><span>RED</span><b id="redCount">—</b></div>
+  </div>
+  <div class="controls">
+    <button class="control" id="todayBtn">TODAY'S REVIEW →</button>
+    <select class="control" id="filter">
+      <option value="all">ALL SONGS</option>
+      <option value="green">🟢 GREEN</option>
+      <option value="yellow">🟡 YELLOW</option>
+      <option value="red">🔴 RED</option>
+      <option value="unlearned">UNLEARNED</option>
+    </select>
+  </div>
+  <div class="updated" id="updatedAt"></div>
+</section>
+
+<section id="reviewSection">
+  <div class="section-head"><h2>Today's Review</h2><span class="section-no">02</span></div>
+  <div id="reviewList" class="review-list"></div>
+</section>
+
+<section id="listSection">
+  <div class="section-head"><h2>100 Poets</h2><span class="section-no">03</span></div>
+  <p class="muted">詠み人をタップすると、その歌の学習カルテが開きます。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>No.</th><th>Poet</th><th>Learned</th><th>Status</th><th>Favorite</th><th>Next Review</th></tr></thead>
+      <tbody id="songList"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="detailSection" class="detail"></section>
+
+<section>
+  <div class="section-head"><h2>Rules</h2><span class="section-no">04</span></div>
+  <div class="roadmap-grid">
+    <div class="card"><b>学習完了</b>意味を自分の言葉で説明できる＋一度は何も見ずに暗唱へ挑戦。</div>
+    <div class="card"><b>定着度</b>🟢 意味を説明でき概ね暗唱できる ／ 🟡 曖昧さあり ／ 🔴 大きな曖昧さあり。</div>
+    <div class="card"><b>間隔反復</b>翌日 → 3日後 → 1週間後 → 2週間後 → 1か月後 → 2〜3か月後。</div>
+    <div class="card"><b>目的</b>完璧に覚えるより、思い出す回数を増やして長期記憶へ移す。</div>
+  </div>
+</section>
+</div>
+
+<div id="roadmap" class="panel">
+<section>
+  <div class="section-head"><h2>Roadmap</h2><span class="section-no">A</span></div>
+  <div class="roadmap-grid">
+    <div class="card"><b>01. 百人一首</b>100首を「古文の100個の実例」として、暗唱・意味・古語・文法・表現・背景を重ねる。</div>
+    <div class="card"><b>02. 古典文法</b>大学受験レベルの文法を並行し、百人一首の実例に結びつける。</div>
+    <div class="card"><b>03. 書道</b>草書・かな・変体仮名・連綿へ。筆の運びを身体で覚える。</div>
+    <div class="card"><b>04. 古筆・巻物</b>古写本・古筆の実物資料へ進み、読める文字と文法を統合する。</div>
+  </div>
+  <div class="quote">読む。意味を知る。暗唱する。書く。<br>同じ一首に、違う角度から何度も出会う。</div>
+</section>
+</div>
+</div>
+
+<script>
+async function loadHyakuninData(){
+  const res = await fetch("data.html?v=" + Date.now(), {cache:"no-store"});
+  if(!res.ok) throw new Error("data.html could not be loaded");
+  const text = await res.text();
+  const doc = new DOMParser().parseFromString(text, "text/html");
+  const node = doc.getElementById("hyakunin-data");
+  if(!node) throw new Error("hyakunin-data not found");
+  window.HYAKUNIN_DATA = JSON.parse(node.textContent);
+}
+loadHyakuninData().then(()=>{
+
+const D=window.HYAKUNIN_DATA;
+const songsByNo=Object.fromEntries(D.songs.map(s=>[s.no,s]));
+const stars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+const statusLabel=s=>s==='green'?'🟢':s==='yellow'?'🟡':'🔴';
+const today=()=>new Date().toLocaleDateString('sv-SE');
+
+function renderStats(){
+  const learned=D.songs.length;
+  const g=D.songs.filter(x=>x.status==='green').length;
+  const y=D.songs.filter(x=>x.status==='yellow').length;
+  const r=D.songs.filter(x=>x.status==='red').length;
+  learnedCount.textContent=`${learned}/100`;
+  greenCount.textContent=g;
+  yellowCount.textContent=y;
+  redCount.textContent=r;
+  heroCount.textContent=learned;
+  progressBar.style.width=`${learned}%`;
+  updatedAt.textContent=`UPDATED — ${D.updatedAt}`;
+}
+
+function renderReview(){
+  const t=today();
+  const items=D.songs.filter(s=>s.nextReview && s.nextReview<=t).sort((a,b)=>a.nextReview.localeCompare(b.nextReview));
+  reviewList.innerHTML=items.length
+    ? items.map(s=>`<div class="item" onclick="showDetail(${s.no})"><span class="num">${String(s.no).padStart(2,'0')}</span><span><b>${s.author}</b><br><span class="muted">${s.poem[0]}…</span></span><span>${s.nextReview}</span></div>`).join('')
+    : '<div class="muted" style="padding:18px 0">今日は予定されている復習はありません。</div>';
+}
+
+function renderList(){
+  const f=filter.value;
+  songList.innerHTML=D.authors.map((a,i)=>{
+    const n=i+1,s=songsByNo[n];
+    if(f==='unlearned' && s) return '';
+    if(f!=='all' && f!=='unlearned' && (!s || s.status!==f)) return '';
+    return `<tr class="${s?'clickable':''}" ${s?`onclick="showDetail(${n})"`:''}>
+      <td>${String(n).padStart(2,'0')}</td>
+      <td>${a}</td>
+      <td>${s?'YES':'—'}</td>
+      <td>${s?`<span class="badge ${s.status}">${statusLabel(s.status)}</span>`:'—'}</td>
+      <td>${s?stars(s.liked):'—'}</td>
+      <td>${s?s.nextReview:'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+window.showDetail=function(no){
+  const s=songsByNo[no]; if(!s)return;
+  detailSection.innerHTML=`
+    <button class="back" onclick="closeDetail()">← BACK TO LIST</button>
+    <div class="detail-title">
+      <div class="detail-no">${String(s.no).padStart(2,'0')}</div>
+      <div><h2>${s.author}</h2><div class="meta">LEARNED ${s.learned} / ${statusLabel(s.status)} / NEXT ${s.nextReview}</div></div>
+    </div>
+    <div class="poem-block">
+      <div class="poem">${s.poem.join('<br>')}</div>
+      <div class="likes">${stars(s.liked)}<div class="meta">FAVORITE ${s.liked}/5</div></div>
+    </div>
+    <div class="field-grid">
+      <div class="field"><b>First Impression</b>${s.firstImpression}</div>
+      <div class="field"><b>After Study</b>${s.afterImpression}</div>
+      <div class="field"><b>My Translation</b>${s.translation}</div>
+      <div class="field"><b>Grammar & Expression</b>${s.grammar.join('<br>')}</div>
+      <div class="field"><b>Notes</b>${s.notes.join('<br>')}</div>
+      <div class="field"><b>Review History</b>${s.reviewHistory.join('<br>')}</div>
+    </div>`;
+  detailSection.classList.add('open');
+  listSection.style.display='none';
+  detailSection.scrollIntoView({behavior:'smooth'});
+}
+
+window.closeDetail=function(){
+  detailSection.classList.remove('open');
+  listSection.style.display='block';
+  listSection.scrollIntoView({behavior:'smooth'});
+}
+
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById(b.dataset.panel).classList.add('active');
+  scrollTo({top:0,behavior:'smooth'});
+});
+filter.onchange=renderList;
+todayBtn.onclick=()=>reviewSection.scrollIntoView({behavior:'smooth'});
+
+renderStats();renderReview();renderList();
+}).catch(err=>{
+  console.error(err);
+  document.body.insertAdjacentHTML("beforeend",
+    '<div style="position:fixed;left:12px;right:12px;bottom:12px;background:#111;color:#fff;padding:14px;z-index:9999">学習データを読み込めませんでした。data.html が index.html と同じ場所にあるか確認してください。</div>');
+});
+</script>
+</body>
+</html>
