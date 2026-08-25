@@ -147,7 +147,7 @@ section{
 .bar{height:4px;background:#d8d3c8;margin-top:12px}
 .bar i{display:block;height:100%;background:var(--accent)}
 .controls{
-  display:grid;grid-template-columns:1fr 1fr;
+  display:grid;grid-template-columns:1fr;
   gap:12px;margin-top:18px
 }
 .control{
@@ -284,6 +284,21 @@ td:nth-child(2){font-weight:800}
 .muted{color:var(--muted)}
 .updated{text-align:right;color:var(--muted);font-size:.72rem;margin-top:14px;letter-spacing:.08em}
 
+
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{min-width:1320px}
+th:first-child,td:first-child{
+  position:sticky;left:0;z-index:4;background:var(--bg)
+}
+th:nth-child(2),td:nth-child(2){
+  position:sticky;left:52px;z-index:3;background:var(--bg)
+}
+th:first-child,th:nth-child(2){z-index:6}
+td:first-child{min-width:52px}
+td:nth-child(2){min-width:150px}
+.schedule-date{font-size:.78rem;white-space:nowrap}
+.latest-review{font-weight:800;white-space:nowrap}
+
 @media(max-width:720px){
   .app{padding-left:14px;padding-right:14px}
   .hero{min-height:48vh}
@@ -327,8 +342,7 @@ td:nth-child(2){font-weight:800}
     <div class="stat"><span>YELLOW</span><b id="yellowCount">—</b></div>
     <div class="stat"><span>RED</span><b id="redCount">—</b></div>
   </div>
-  <div class="controls">
-    <button class="control" id="todayBtn">TODAY'S REVIEW →</button>
+  <div class="controls single">
     <select class="control" id="filter">
       <option value="all">ALL SONGS</option>
       <option value="green">🟢 GREEN</option>
@@ -340,17 +354,26 @@ td:nth-child(2){font-weight:800}
   <div class="updated" id="updatedAt"></div>
 </section>
 
-<section id="reviewSection">
-  <div class="section-head"><h2>Today's Review</h2><span class="section-no">02</span></div>
-  <div id="reviewList" class="review-list"></div>
-</section>
 
 <section id="listSection">
   <div class="section-head"><h2>100 Poets</h2><span class="section-no">03</span></div>
-  <p class="muted">詠み人をタップすると、その歌の学習カルテが開きます。</p>
+  <p class="muted">詠み人をタップすると学習カルテが開きます。復習予定日は初回学習日から自動計算します。</p>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>No.</th><th>Poet</th><th>Learned</th><th>Status</th><th>Favorite</th><th>Next Review</th></tr></thead>
+      <thead><tr>
+<th>No.</th>
+<th>Poet</th>
+<th>Learned</th>
+<th>Status</th>
+<th>Favorite</th>
+<th>翌日</th>
+<th>3日後</th>
+<th>1週間後</th>
+<th>2週間後</th>
+<th>1か月後</th>
+<th>2〜3か月後</th>
+<th>Latest Review</th>
+</tr></thead>
       <tbody id="songList"></tbody>
     </table>
   </div>
@@ -401,6 +424,50 @@ const stars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
 const statusLabel=s=>s==='green'?'🟢':s==='yellow'?'🟡':'🔴';
 const today=()=>new Date().toLocaleDateString('sv-SE');
 
+function parseLocalDate(str){
+  const [y,m,d]=str.split('-').map(Number);
+  return new Date(y,m-1,d);
+}
+function fmtDate(date){
+  const y=date.getFullYear();
+  const m=String(date.getMonth()+1).padStart(2,'0');
+  const d=String(date.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function addDays(str,days){
+  const d=parseLocalDate(str);
+  d.setDate(d.getDate()+days);
+  return fmtDate(d);
+}
+function addMonths(str,months){
+  const d=parseLocalDate(str);
+  const originalDay=d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth()+months);
+  const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  d.setDate(Math.min(originalDay,last));
+  return fmtDate(d);
+}
+function scheduleFor(s){
+  if(!s) return null;
+  return {
+    nextDay:addDays(s.learned,1),
+    day3:addDays(s.learned,3),
+    week1:addDays(s.learned,7),
+    week2:addDays(s.learned,14),
+    month1:addMonths(s.learned,1),
+    month23:`${addMonths(s.learned,2)}〜${addMonths(s.learned,3)}`
+  };
+}
+function latestReviewDate(s){
+  if(!s || !Array.isArray(s.reviewHistory)) return '—';
+  const dates=s.reviewHistory
+    .map(x=>(String(x).match(/\d{4}-\d{2}-\d{2}/)||[])[0])
+    .filter(Boolean)
+    .sort();
+  return dates.length ? dates[dates.length-1] : (s.learned || '—');
+}
+
 function renderStats(){
   const learned=D.songs.length;
   const g=D.songs.filter(x=>x.status==='green').length;
@@ -429,13 +496,21 @@ function renderList(){
     const n=i+1,s=songsByNo[n];
     if(f==='unlearned' && s) return '';
     if(f!=='all' && f!=='unlearned' && (!s || s.status!==f)) return '';
+    const sc=s?scheduleFor(s):null;
+    const latest=s?latestReviewDate(s):'—';
     return `<tr class="${s?'clickable':''}" ${s?`onclick="showDetail(${n})"`:''}>
       <td>${String(n).padStart(2,'0')}</td>
       <td>${a}</td>
-      <td>${s?'YES':'—'}</td>
+      <td>${s?s.learned:'—'}</td>
       <td>${s?`<span class="badge ${s.status}">${statusLabel(s.status)}</span>`:'—'}</td>
       <td>${s?stars(s.liked):'—'}</td>
-      <td>${s?s.nextReview:'—'}</td>
+      <td class="schedule-date">${sc?sc.nextDay:'—'}</td>
+      <td class="schedule-date">${sc?sc.day3:'—'}</td>
+      <td class="schedule-date">${sc?sc.week1:'—'}</td>
+      <td class="schedule-date">${sc?sc.week2:'—'}</td>
+      <td class="schedule-date">${sc?sc.month1:'—'}</td>
+      <td class="schedule-date">${sc?sc.month23:'—'}</td>
+      <td class="latest-review">${latest}</td>
     </tr>`;
   }).join('');
 }
@@ -446,7 +521,7 @@ window.showDetail=function(no){
     <button class="back" onclick="closeDetail()">← BACK TO LIST</button>
     <div class="detail-title">
       <div class="detail-no">${String(s.no).padStart(2,'0')}</div>
-      <div><h2>${s.author}</h2><div class="meta">LEARNED ${s.learned} / ${statusLabel(s.status)} / NEXT ${s.nextReview}</div></div>
+      <div><h2>${s.author}</h2><div class="meta">LEARNED ${s.learned} / ${statusLabel(s.status)} / LATEST REVIEW ${latestReviewDate(s)}</div></div>
     </div>
     <div class="poem-block">
       <div class="poem">${s.poem.join('<br>')}</div>
@@ -478,9 +553,8 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   scrollTo({top:0,behavior:'smooth'});
 });
 filter.onchange=renderList;
-todayBtn.onclick=()=>reviewSection.scrollIntoView({behavior:'smooth'});
 
-renderStats();renderReview();renderList();
+renderStats();renderList();
 }).catch(err=>{
   console.error(err);
   document.body.insertAdjacentHTML("beforeend",
